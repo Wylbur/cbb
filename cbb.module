@@ -1,0 +1,180 @@
+<?php
+
+/**
+ * @file
+ * Add support for Cookie Based Blocks.
+ *
+ * Cookie Based Blocks (cbb for short) allows users to add cookie based display
+ * to any block through the block's configuration interface. This implementation
+ * is based on an alteration of the Core block database table to leverage the
+ * Core Block API functions, objects and structure.
+ */
+
+/**
+ * Implements hook_permission().
+ */
+function cbb_permission() {
+  return array(
+    'administer cookie based blocks' => array(
+      'title' => t('Administer cookie based blocks'),
+      'description' => t('Set Cookie basedparameters for blocks.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_block_view_alter().
+ */
+function cbb_block_view_alter(&$data, $block) {
+  if (isset($block->cbb)) {
+    _cbb_unserialize($block);
+  }
+  if (isset($block->cbb) && $block->cbb) {
+    if (isset($data['content']) && is_string($data['content'])) {
+      if (empty($data['content'])) {
+        return;
+      }
+      $data['content'] = array(
+        '#markup' => $data['content'],
+      );
+    }
+    $data['content']['#attached']['js'][] = array(
+      'data' => drupal_get_path('module', 'cbb') . '/cbb.js',
+    );
+    $data['content']['#attached']['js'][] = array(
+      'data' => array(
+        'cbb' => array(
+          'cbb_expose_after' => $block->cbb_expose_after,
+        ),
+      ),
+      'type' => 'setting',
+    );
+  }
+}
+
+/**
+ * Implements theme_preprocess_block().
+ *
+ * Extend block's classes with any user defined classes.
+ */
+function cbb_preprocess_block(&$vars) {
+  $block = $vars['block'];
+  if (!empty($block->cbb_use) && $block->cbb_use) {
+    _cbb_alter_block_vars($block, $vars);
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK().
+ *
+ * Extend panel block's with Cookie Based exposure.
+ */
+function cbb_preprocess_panels_pane(&$vars) {
+  if ($vars['pane']->type != 'block') {
+    return;
+  }
+  // Infer the block's $module and $delta from the pane subtype.
+  $block_parts = explode('-', $vars['pane']->subtype);
+  // Load the block based on the block parts.
+  $block = block_load($block_parts[0], $block_parts[1]);
+  // Add a generic 'module type' pane class.
+  $vars['classes_array'][] = drupal_html_class('pane-' . $block->module);
+  // Add $css_class to the $classes_array.
+  if (!empty($block->cbb_use)) {
+    _cbb_alter_block_vars($block, $vars);
+  }
+}
+
+function _cbb_alter_block_vars($block, &$vars) {
+  // TODO: change this to JS inclusion, Drupal variables
+  $classes_array = ['block-cbb'];
+  foreach ($classes_array as $class) {
+    $vars['classes_array'][] = drupal_clean_css_identifier($class, array());
+  }
+}
+
+function _cbb_fields() {
+  return array(
+    'cbb_use' => FALSE,
+    'cbb_expose_after' => "1 day",
+  );
+}
+
+function _cbb_unserialize($block) {
+  // Why do I have to unserialize
+  $block->cbb = unserialize($block->cbb);
+
+  // Map valeus to block variables
+  foreach (_cbb_fields() as $key => $default) {
+    $block->$key = isset($block->cbb[$key]) ? $block->cbb[$key] : $default;
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * Alter block edit form to add configuration field.
+ */
+function cbb_form_alter(&$form, &$form_state, $form_id) {
+  if (user_access('administer cookie based blocks') && ($form_id == 'block_admin_configure' || $form_id == 'block_add_block_form')) {
+    // Load statically cached block object used to display the form.
+    $block = block_load($form['module']['#value'], $form['delta']['#value']);
+
+    _cbb_unserialize($block);
+
+
+    $form['settings']['cbb_use'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Use Cookie Based Block.'),
+      '#default_value' => isset($block->cbb_use) ? $block->cbb_use : FALSE,
+    );
+
+    $form['settings']['cbb_expose_after'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Show block again after previous exposure.'),
+      '#description' => t('Use PHP style duration like "7 days", "1 week". See PHP strtotime function for more info.'),
+      '#default_value' => isset($block->cbb_expose_after) ? $block->cbb_expose_after : "1 day",
+      '#states' => array(
+        'invisible' => array(
+          ':input[name="cbb_use"]' => array('checked' => FALSE),
+        ),
+      ),
+    );
+
+    $form['#submit'][] = 'cbb_form_submit';
+  }
+}
+
+/**
+ * Helper function: additional submit callback for block configuration pages.
+ *
+ * Save supplied Cookie Based Block settings.
+ */
+function cbb_form_submit($form, &$form_state) {
+  if ($form_state['values']['form_id'] == 'block_admin_configure' || $form_state['values']['form_id'] == 'block_add_block_form') {
+    // Only save if value has changed.
+    if ($form['settings']['cbb_use']['#default_value'] != $form_state['values']['cbb_use'] && user_access('administer blocks')) {
+      if (isset($form_state['values']['cbb_use']) && $form_state['values']['cbb_use']) {
+        $values = [];
+        $values['cbb_use'] = $form_state['values']['cbb_use'];
+        $values['cbb_expose_after'] = $form_state['values']['cbb_expose_after'];
+
+        $cbb = serialize($values);
+
+      }
+      else {
+        $cbb = NULL;
+      }
+
+      db_update('block')
+        ->fields(array('cbb' => $cbb))
+        ->condition('module', $form_state['values']['module'])
+        ->condition('delta', $form_state['values']['delta'])
+        ->execute();
+      // Flush all context module cache to use the updated css_class.
+      if (module_exists('context')) {
+        cache_clear_all('context', 'cache', TRUE);
+      }
+    }
+  }
+}

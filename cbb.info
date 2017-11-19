@@ -1,0 +1,5 @@
+name = Cookie Based Blocks
+description = Make blocks cookie aware.
+core = 7.x
+
+dependencies[] = block

@@ -1,0 +1,1 @@
+console.log("Cookie based block loaded");
