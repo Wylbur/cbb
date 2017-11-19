@@ -44,7 +44,9 @@ function cbb_block_view_alter(&$data, $block) {
     $data['content']['#attached']['js'][] = array(
       'data' => array(
         'cbb' => array(
-          'cbb_expose_after' => $block->cbb_expose_after,
+          'block-' . $block->module . '-' . $block->delta => array(
+            'cbb_expose_after' => $block->cbb_expose_after,
+          ),
         ),
       ),
       'type' => 'setting',
