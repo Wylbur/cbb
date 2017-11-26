@@ -9,6 +9,7 @@
     $(document).ready(function () {
         var $cbb = $(".block-cbb").each(function () {
             var $block = $(this);
+            $block.hide();
             var blockId = $block.attr('id');
             console.log("Cookie based block: " + blockId);
 
