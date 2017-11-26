@@ -148,7 +148,40 @@ function cbb_form_alter(&$form, &$form_state, $form_id) {
       ),
     );
 
+    $form['#validate'][] = 'cbb_form_validate';
     $form['#submit'][] = 'cbb_form_submit';
+  }
+}
+
+function cbb_form_validate($form, &$form_state) {
+  if ($form_state['values']['form_id'] == 'block_admin_configure' || $form_state['values']['form_id'] == 'block_add_block_form') {
+    if ($form_state['values']['cbb_use'] && user_access('administer blocks')) {
+      if (isset($form_state['values']['cbb_use']) && $form_state['values']['cbb_use']) {
+        $cbb_expose_after = $form_state['values']['cbb_expose_after'];
+        $cbb_expose_after = preg_replace('!\s+!', ' ', $cbb_expose_after);
+        $cbb_expose_after = trim($cbb_expose_after);
+
+        $values = explode(" ", $cbb_expose_after);
+        if (count($values) != 2) {
+          form_set_error('cbb_expose_after', "This needs a number separated by a string.");
+        }
+        else {
+          $steps = $values[0];
+          $period = $values[1];
+
+          if ('' . intval($steps) != $steps || intval($steps) <= 0) {
+            form_set_error('cbb_expose_after', t("First value should be a positive integer"));
+          }
+
+          $lookup = array('minutes', 'hours', 'days', 'weeks');
+          if (!in_array($period, $lookup) && !in_array($period.'s', $lookup)) {
+            form_set_error('cbb_expose_after', t("Second value should be a duration: %periods", array('%periods' => join(', ', $lookup))));
+          }
+        }
+
+        form_set_value($form['settings']['cbb_expose_after'], $cbb_expose_after, $form_state);
+      }
+    }
   }
 }
 
