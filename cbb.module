@@ -162,7 +162,7 @@ function cbb_form_submit($form, &$form_state) {
     // Only save if value has changed.
     if ($form['settings']['cbb_use']['#default_value'] != $form_state['values']['cbb_use'] && user_access('administer blocks')) {
       if (isset($form_state['values']['cbb_use']) && $form_state['values']['cbb_use']) {
-        $values = [];
+        $values = array();
         $values['cbb_use'] = $form_state['values']['cbb_use'];
         $values['cbb_expose_after'] = $form_state['values']['cbb_expose_after'];
 
