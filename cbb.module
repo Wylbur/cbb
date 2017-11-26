@@ -104,7 +104,12 @@ function _cbb_fields() {
 
 function _cbb_unserialize($block) {
   // Why do I have to unserialize
-  $block->cbb = unserialize($block->cbb);
+  if ($block->cbb) {
+    $block->cbb = unserialize($block->cbb);
+  }
+  else {
+    $block->cbb = array();
+  }
 
   // Map valeus to block variables
   foreach (_cbb_fields() as $key => $default) {
