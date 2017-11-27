@@ -37,8 +37,11 @@
                 var cookieExpire = {expires: new Date(nextMillisecs)};
 
                 $.cookie(cookieId, '1', cookieExpire);
-                if ($.colorbox) {
+                if (settings.cbb_use_colorbox && $.colorbox) {
                     $.colorbox({html: $block.html()});
+                }
+                else {
+                    $block.show();
                 }
             }
         });
