@@ -38,9 +38,16 @@ function cbb_block_view_alter(&$data, $block) {
         '#markup' => $data['content'],
       );
     }
+
+
+    $data['content']['#attached']['css'][] = array(
+      'data' => drupal_get_path('module', 'cbb') . '/cbb.css',
+    );
+
     $data['content']['#attached']['js'][] = array(
       'data' => drupal_get_path('module', 'cbb') . '/cbb.js',
     );
+
     $data['content']['#attached']['js'][] = array(
       'data' => array(
         'cbb' => array(
