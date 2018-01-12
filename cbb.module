@@ -216,7 +216,11 @@ function cbb_form_validate($form, &$form_state) {
 function cbb_form_submit($form, &$form_state) {
   if ($form_state['values']['form_id'] == 'block_admin_configure' || $form_state['values']['form_id'] == 'block_add_block_form') {
     // Only save if value has changed.
-    if ($form['settings']['cbb_use']['#default_value'] != $form_state['values']['cbb_use'] && user_access('administer blocks')) {
+    $changed = $form['settings']['cbb_use']['#default_value'] != $form_state['values']['cbb_use'];
+    $changed = $changed || $form['settings']['cbb_expose_after']['#default_value'] != $form_state['values']['cbb_expose_after'];
+    $changed = $changed || $form['settings']['cbb_use_colorbox']['#default_value'] != $form_state['values']['cbb_use_colorbox'];
+
+    if ($changed && user_access('administer blocks')) {
       if (isset($form_state['values']['cbb_use']) && $form_state['values']['cbb_use']) {
         $values = array();
         $values['cbb_use'] = $form_state['values']['cbb_use'];
