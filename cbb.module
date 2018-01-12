@@ -44,6 +44,8 @@ function cbb_block_view_alter(&$data, $block) {
       'data' => drupal_get_path('module', 'cbb') . '/cbb.css',
     );
 
+    $data['content']['#attached']['library'][] = array('system','jquery.cookie');
+
     $data['content']['#attached']['js'][] = array(
       'data' => drupal_get_path('module', 'cbb') . '/cbb.js',
     );
