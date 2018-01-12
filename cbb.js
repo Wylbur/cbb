@@ -16,7 +16,8 @@
             var cookieId = 'Drupal.cbb.' + blockId;
             var settings = Drupal.settings.cbb[blockId];
             //if (settings)
-            if ($.cookie(cookieId) != '1') {
+            var cookie = $.cookie(cookieId);
+            if (cookie != '1') {
 
                 var expires_data = settings.cbb_expose_after.split(' ');
                 var steps = parseInt(expires_data[0]);

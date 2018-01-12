@@ -195,7 +195,7 @@ function cbb_form_validate($form, &$form_state) {
           }
 
           $lookup = array('minutes', 'hours', 'days', 'weeks');
-          if (!in_array($period, $lookup) && !in_array($period.'s', $lookup)) {
+          if (!in_array($period, $lookup) && !in_array($period . 's', $lookup)) {
             form_set_error('cbb_expose_after', t("Second value should be a duration: %periods", array('%periods' => join(', ', $lookup))));
           }
         }
