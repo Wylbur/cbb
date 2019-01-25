@@ -55,6 +55,7 @@ function cbb_block_view_alter(&$data, $block) {
         'cbb' => array(
           'block-' . $block->module . '-' . $block->delta => array(
             'cbb_expose_after' => $block->cbb_expose_after,
+            'cbb_expose_delay' => $block->cbb_expose_delay,
             'cbb_use_colorbox' => $block->cbb_use_colorbox,
           ),
         ),
@@ -109,6 +110,7 @@ function _cbb_fields() {
   return array(
     'cbb_use' => FALSE,
     'cbb_expose_after' => "1 day",
+    'cbb_expose_delay' => "0",
     'cbb_use_colorbox' => FALSE,
   );
 }
@@ -152,6 +154,17 @@ function cbb_form_alter(&$form, &$form_state, $form_id) {
       '#title' => t('Show block again after previous exposure.'),
       '#description' => t('Use PHP style duration like "7 days", "1 week". See PHP strtotime function for more info.'),
       '#default_value' => isset($block->cbb_expose_after) ? $block->cbb_expose_after : "1 day",
+      '#states' => array(
+        'invisible' => array(
+          ':input[name="cbb_use"]' => array('checked' => FALSE),
+        ),
+      ),
+    );
+
+    $form['settings']['cbb_expose_delay'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Delay block display for n seconds.'),
+      '#default_value' => isset($block->cbb_expose_delay) ? $block->cbb_expose_delay : "0",
       '#states' => array(
         'invisible' => array(
           ':input[name="cbb_use"]' => array('checked' => FALSE),
@@ -203,6 +216,13 @@ function cbb_form_validate($form, &$form_state) {
         }
 
         form_set_value($form['settings']['cbb_expose_after'], $cbb_expose_after, $form_state);
+
+        // We cannot make field required so it could be empty so we MUST validate
+        $cbb_expose_delay = $form_state['values']['cbb_expose_delay'];
+        if ('' . intval($cbb_expose_delay) != $cbb_expose_delay || intval($cbb_expose_delay) < 0) {
+          form_set_error('cbb_expose_delay', t("The delay value '%cbb_expose_delay' should be a non negative integer", array('%cbb_expose_delay' => $cbb_expose_delay)));
+        }
+        form_set_value($form['settings']['cbb_expose_delay'], $cbb_expose_delay, $form_state);
       }
     }
   }
@@ -218,6 +238,7 @@ function cbb_form_submit($form, &$form_state) {
     // Only save if value has changed.
     $changed = $form['settings']['cbb_use']['#default_value'] != $form_state['values']['cbb_use'];
     $changed = $changed || $form['settings']['cbb_expose_after']['#default_value'] != $form_state['values']['cbb_expose_after'];
+    $changed = $changed || $form['settings']['cbb_expose_delay']['#default_value'] != $form_state['values']['cbb_expose_delay'];
     $changed = $changed || $form['settings']['cbb_use_colorbox']['#default_value'] != $form_state['values']['cbb_use_colorbox'];
 
     if ($changed && user_access('administer blocks')) {
@@ -225,6 +246,7 @@ function cbb_form_submit($form, &$form_state) {
         $values = array();
         $values['cbb_use'] = $form_state['values']['cbb_use'];
         $values['cbb_expose_after'] = $form_state['values']['cbb_expose_after'];
+        $values['cbb_expose_delay'] = $form_state['values']['cbb_expose_delay'];
         $values['cbb_use_colorbox'] = $form_state['values']['cbb_use_colorbox'];
 
         $cbb = serialize($values);
