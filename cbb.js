@@ -27,13 +27,12 @@
         var date = new Date();
         var nextMillisecs = date.getTime() + seconds * 1000;
 
-        var cookieExpire = {expires: new Date(nextMillisecs)};
-
         var options = {
-            path: '/'
+            path: '/',
+            expires: new Date(nextMillisecs)
         };
 
-        $.cookie(cookieId, '1', cookieExpire, options);
+        $.cookie(cookieId, '1', options);
         if (settings.cbb_use_colorbox && $.colorbox) {
             $.colorbox({html: $block.html()});
         }
