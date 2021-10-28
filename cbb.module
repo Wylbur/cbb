@@ -41,13 +41,13 @@ function cbb_block_view_alter(&$data, $block) {
 
 
     $data['content']['#attached']['css'][] = array(
-      'data' => drupal_get_path('module', 'cbb') . '/cbb.css',
+      'data' => backdrop_get_path('module', 'cbb') . '/cbb.css',
     );
 
     $data['content']['#attached']['library'][] = array('system','jquery.cookie');
 
     $data['content']['#attached']['js'][] = array(
-      'data' => drupal_get_path('module', 'cbb') . '/cbb.js',
+      'data' => backdrop_get_path('module', 'cbb') . '/cbb.js',
     );
 
     $data['content']['#attached']['js'][] = array(
@@ -91,7 +91,7 @@ function cbb_preprocess_panels_pane(&$vars) {
   // Load the block based on the block parts.
   $block = block_load($block_parts[0], $block_parts[1]);
   // Add a generic 'module type' pane class.
-  $vars['classes_array'][] = drupal_html_class('pane-' . $block->module);
+  $vars['classes_array'][] = backdrop_html_class('pane-' . $block->module);
   // Add $css_class to the $classes_array.
   if (!empty($block->cbb_use)) {
     _cbb_alter_block_vars($block, $vars);
@@ -99,10 +99,10 @@ function cbb_preprocess_panels_pane(&$vars) {
 }
 
 function _cbb_alter_block_vars($block, &$vars) {
-  // TODO: change this to JS inclusion, Drupal variables
+  // TODO: change this to JS inclusion, backdrop variables
   $classes_array = ['block-cbb'];
   foreach ($classes_array as $class) {
-    $vars['classes_array'][] = drupal_clean_css_identifier($class, array());
+    $vars['classes_array'][] = backdrop_clean_css_identifier($class, array());
   }
 }
 
@@ -191,6 +191,10 @@ function cbb_form_layout_block_configure_form_alter(&$form, &$form_state) {
   }
 }
 
+/**
+ * Implements hook_form_validate
+ * Vallidate the values entered into block settings
+ */
 function cbb_form_validate($form, &$form_state) {
   if ($form_state['values']['form_id'] == 'block_admin_configure' || $form_state['values']['form_id'] == 'block_add_block_form') {
     if ($form_state['values']['cbb_use'] && user_access('administer blocks')) {

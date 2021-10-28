@@ -8,8 +8,8 @@
 
     function cbbBlock(blockId) {
         var $block = $('#' + blockId);
-        var settings = Backdrop.settings.cbb[blockId];
-        var cookieId = 'Backdrop.cbb.' + blockId;
+        var settings = Drupal.settings.cbb[blockId];
+        var cookieId = 'Drupal.cbb.' + blockId;
 
         var expires_data = settings.cbb_expose_after.split(' ');
         var steps = parseInt(expires_data[0]);
@@ -49,8 +49,8 @@
             var blockId = $block.attr('id');
             console.log("Cookie based block: " + blockId);
 
-            var cookieId = 'Backdrop.cbb.' + blockId;
-            var settings = Backdrop.settings.cbb[blockId];
+            var cookieId = 'Drupal.cbb.' + blockId;
+            var settings = Drupal.settings.cbb[blockId];
             if (settings) {
                 var cookie = $.cookie(cookieId);
                 if (cookie != '1') {
