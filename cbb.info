@@ -1,5 +1,6 @@
+type = module
 name = Cookie Based Blocks
 description = Make blocks cookie aware.
-core = 7.x
+backdrop = 1.x
 
 dependencies[] = block

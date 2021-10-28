@@ -135,14 +135,16 @@ function _cbb_unserialize($block) {
  *
  * Alter block edit form to add configuration field.
  */
-function cbb_form_alter(&$form, &$form_state, $form_id) {
-  if (user_access('administer cookie based blocks') && ($form_id == 'block_admin_configure' || $form_id == 'block_add_block_form')) {
-    // Load statically cached block object used to display the form.
-    $block = block_load($form['module']['#value'], $form['delta']['#value']);
+function cbb_form_layout_block_configure_form_alter(&$form, &$form_state) {
+  if (user_access('administer cookie based blocks') ) {
+    $layout = $form_state['layout'];
+    $block = $form_state['block']; 
 
-    _cbb_unserialize($block);
-
-
+ /*   _cbb_unserialize($block); */
+    if(!property_exists($block, "cbb_use")) {
+      $block->cbb_use = 0;
+    }
+    dpm($block);
     $form['settings']['cbb_use'] = array(
       '#type' => 'checkbox',
       '#title' => t('Use Cookie Based Block.'),
@@ -185,7 +187,7 @@ function cbb_form_alter(&$form, &$form_state, $form_id) {
     );
 
     $form['#validate'][] = 'cbb_form_validate';
-    $form['#submit'][] = 'cbb_form_submit';
+    $form['#submit'][] = 'cbb_layout_block_configure_form_submit';
   }
 }
 
@@ -233,29 +235,31 @@ function cbb_form_validate($form, &$form_state) {
  *
  * Save supplied Cookie Based Block settings.
  */
-function cbb_form_submit($form, &$form_state) {
-  if ($form_state['values']['form_id'] == 'block_admin_configure' || $form_state['values']['form_id'] == 'block_add_block_form') {
+function cbb_layout_block_configure_form_submit($form, &$form_state) {
     // Only save if value has changed.
     $changed = $form['settings']['cbb_use']['#default_value'] != $form_state['values']['cbb_use'];
     $changed = $changed || $form['settings']['cbb_expose_after']['#default_value'] != $form_state['values']['cbb_expose_after'];
     $changed = $changed || $form['settings']['cbb_expose_delay']['#default_value'] != $form_state['values']['cbb_expose_delay'];
     $changed = $changed || $form['settings']['cbb_use_colorbox']['#default_value'] != $form_state['values']['cbb_use_colorbox'];
 
-    if ($changed && user_access('administer blocks')) {
-      if (isset($form_state['values']['cbb_use']) && $form_state['values']['cbb_use']) {
-        $values = array();
-        $values['cbb_use'] = $form_state['values']['cbb_use'];
-        $values['cbb_expose_after'] = $form_state['values']['cbb_expose_after'];
-        $values['cbb_expose_delay'] = $form_state['values']['cbb_expose_delay'];
-        $values['cbb_use_colorbox'] = $form_state['values']['cbb_use_colorbox'];
+    if ( $changed && user_access('administer blocks')) {
+      dpm("Saving!");
+      // if (isset($form_state['values']['cbb_use']) && $form_state['values']['cbb_use']) { 
+        $block = $form_state['block']; 
+        // dpm($form_state['values']);
+        $block->settings['block_settings']['cbb_use'] = $form_state['values']['settings']['cbb_use'];
+        $block->settings['block_settings']['cbb_expose_after'] = $form_state['values']['settings']['cbb_expose_after'];
+        $block->settings['block_settings']['cbb_expose_delay'] = $form_state['values']['settings']['cbb_expose_delay'];
+        $block->settings['block_settings']['cbb_use_colorbox'] = $form_state['values']['settings']['cbb_use_colorbox'];
+        $form_state['block'] = $block; 
+        dpm($block);
 
-        $cbb = serialize($values);
+        // Save the block settings.
+        $block->formSubmit($form, $form_state);
 
-      }
-      else {
-        $cbb = NULL;
-      }
+      // }
 
+      /*
       db_update('block')
         ->fields(array('cbb' => $cbb))
         ->condition('module', $form_state['values']['module'])
@@ -265,6 +269,6 @@ function cbb_form_submit($form, &$form_state) {
       if (module_exists('context')) {
         cache_clear_all('context', 'cache', TRUE);
       }
+      */
     }
-  }
 }
