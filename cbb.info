@@ -2,5 +2,8 @@ type = module
 name = Cookie Based Blocks
 description = Make blocks cookie aware.
 backdrop = 1.x
+tags[] = Appearance
+tags[] = Blocks
+tags[] = Theme Enhancement
 
 dependencies[] = block
